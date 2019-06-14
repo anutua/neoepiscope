@@ -1,1 +1,16 @@
- 
+<tool id="neoepiscopeWrapper" name="neopiscope" version="0.1.0" python_template_version="3.5">
+    <requirements>
+    </requirements>
+    <command interpreter="python">someTool.py
+
+    </command>
+    <inputs>
+    </inputs>
+    <outputs>
+    </outputs>
+    <help><![CDATA[
+       This technically doesn't do anything.
+    ]]></help>
+
+</tool>
+
