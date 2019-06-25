@@ -1,15 +1,47 @@
-<tool id="neoepiscopeWrapper" name="neopiscope" version="0.1.0" python_template_version="3.5">
+<tool id="neoepiscopeWrapper2" name="neopiscopeexe" version="0.1.0" python_template_version="3.5">
+    <description>
+        Calls neoepitopes from DNA seq ofnormal and tumor sample sequences
+    </description>
     <requirements>
     </requirements>
-    <command interpreter="python">someTool.py
+    <command><![CDATA[ 
+    neoepiscope call
+        -x '${bowtie_INDEX}' 
+        -v '${vcf_file}' 
+        -d '${dicts}'
+        -c '${merged_hapCUT2_OUTPUT}' 
+        -k '${kmer_size}'
+        -p '${affinity_predictor}'
+        -n 
+        -a '${alleles}' 
+        -o '${output}' 
+        -f
+        -u '${upstream_atgs}'
+        
+        -b '${build}'
+        -i
+
+    ]]>
 
     </command>
+
     <inputs>
+    	<param name="bowtie_INDEX" type="data" label="HapCUT2 output from vcf file"/>
+    	<param name="vcf_file" type="data" format="vcf" label="BAM file from tumor sample alignment" />
+        <param name="dicts" type="data"  label="pickled CDS dictionary directory " />
+        <param name="merged_hapCUT2_OUTPUT" type="data"  label="hapCUT2 output from vcf file " />
+        <param name="kmer_size" type="data"  label="kmer size for epitope calculation" />
+        <param name="affinity_predictor" type="data"  label="binding affinity prediction software with version number and scoring methods" />
+        <param name="alleles" type="data" format="csv" label="kmer size for epitope calculation" />
+        <param name="upstream_atgs" type="data"  label="kmer size for epitope calculation" />
+        <param name="build" type="data"  label="hg19 or GRCh38" />
+        
     </inputs>
     <outputs>
+    	<data name="output" format="tsv" label="Neoepitopes found" />
     </outputs>
     <help><![CDATA[
-       This technically doesn't do anything.
+       Wraps 
     ]]></help>
 
 </tool>
