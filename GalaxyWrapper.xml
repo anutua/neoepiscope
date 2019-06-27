@@ -1,48 +1,70 @@
-<tool id="neoepiscopeWrapper2" name="neopiscopeexe" version="0.1.0" python_template_version="3.5">
+<tool id="neoepiscopeWrapper2" name="neopiscopeExe" version="0.1.0" python_template_version="3.5">
     <description>
         Calls neoepitopes from DNA seq ofnormal and tumor sample sequences
     </description>
     <requirements>
     </requirements>
+
+    <!--Specify the command to be passed to terminal based on the user inputs for neoepiscope call-->
+
     <command><![CDATA[ 
     neoepiscope call
-        -x '${bowtie_INDEX}' 
-        -v '${vcf_file}' 
-        -d '${dicts}'
-        -c '${merged_hapCUT2_OUTPUT}' 
-        -k '${kmer_size}'
-        -p '${affinity_predictor}'
-        -n 
-        -a '${alleles}' 
-        -o '${output}' 
-        -f
-        -u '${upstream_atgs}'
-        
-        -b '${build}'
-        -i
+
+    #if str($name1.hapCUT2_OUTPUT=="Yes" ):
+        -c '$merged_hapCUT2_OUTPUT' 
+    #end if 
+
+    #if str($build=="hg19"):
+        -hg19
+    #else if str($build=="GRCh38" ): 
+        -GRCh38
+    #end if
+    
+    #if $affinity:
+        --whatever
+        #else
+        --no-affinity 
+        #end if
+
+    -o $output
 
     ]]>
 
     </command>
 
     <inputs>
-    	<param name="bowtie_INDEX" type="data" label="HapCUT2 output from vcf file"/>
-    	<param name="vcf_file" type="data" format="vcf" label="BAM file from tumor sample alignment" />
-        <param name="dicts" type="data"  label="pickled CDS dictionary directory " />
-        <param name="merged_hapCUT2_OUTPUT" type="data"  label="hapCUT2 output from vcf file " />
-        <param name="kmer_size" type="data"  label="kmer size for epitope calculation" />
-        <param name="affinity_predictor" type="data"  label="binding affinity prediction software with version number and scoring methods" />
-        <param name="alleles" type="data" format="csv" label="kmer size for epitope calculation" />
-        <param name="upstream_atgs" type="data"  label="kmer size for epitope calculation" />
-        <param name="build" type="data"  label="hg19 or GRCh38" />
+        <conditional name="name1">
+            <param name="hapCUT2_OUTPUT" type="boolean" truevalue="Yes" falsevalue="No" label="Do you have a hapCUT2 output from your vcf file processing? " />
+            <when value="Yes">
+                <param name="merged_hapCUT2_OUTPUT" type="data" label="Input hapCUT2 output from your vcf file" />
+            </when>
+        </conditional>
+        
+        <param name="build" type="select" label="Please select your preferred genome build from the drop down list." >
+                <option value="hg19">hg19</option>
+                <option value="GRCh38">GRCh38</option>
+        </param>
+
+        <param name="affinity" type="boolean" label="Calculate binding affinity? " />
         
     </inputs>
     <outputs>
-    	<data name="output" format="tsv" label="Neoepitopes found" />
+        <data name="output" format="tsv" label="Neoepitopes found" />
     </outputs>
+    
     <help><![CDATA[
        Wraps 
-    ]]></help>
+    ]]>
+        
+    </help>
 
 </tool>
 
+<!--<conditional name="name2">
+            <param name="affinity" type="boolean" truevalue="Yes" falsevalue="No"label="Should binding affinity be calculated?" />
+            <when value="Yes">
+                <param name="affinity_predictor_name" type="select" label="Select your software" />
+                <param name="affinity_predictor_version" type="select" label="Select its version number" />
+                <param name="affinity_predictor_score" type="select" label="Select its score" />
+            </when>
+        </conditional>
