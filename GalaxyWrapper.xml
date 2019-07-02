@@ -1,4 +1,5 @@
-<tool id="neoepiscopeWrapper2" name="neoepiscope" version="0.1.0" python_template_version="3.5">
+<!--Assumes $neoepiscope download has been run afer installation. All default dependency files present-->
+<tool id="neoepiscopeWrapper2" name="neoepiscope_neoepitope " version="0.1.0" python_template_version="3.5">
     
     <requirements>
     </requirements>
@@ -8,46 +9,54 @@
 
         #if str($name3.build)=="uploadBuild": 
         neoepiscope index
-        -g "${GTF}" -d "${dict_path}"
+        -g "${GTF}" -d "${dict_path}" 
+        2>/dev/null;
         #end if
+        
 
-        #if str($name1.hapCUT2_OUTPUT=="No" ):
-            #if str($name1.hapCUT2_OUTPUT.somatic_vcf):
-                #if str($name1.hapCUT2_OUTPUT.somatic_vcf.germline_option)=="Yes":
-                        #if str($name1.hapCUT2_OUTPUT.somatic_vcf.germline_option.germline_vcf):
-                        -neoepiscope merge -g "${germline_vcf}" "${somatic_vcf}" -o "${merged_vcf}"
+      
+        #if str($name1.hapCUT2_OUTPUT)=="No":
+            #if ($name1.somatic_vcf):
+                #if (str($name1.name4.germline_option)=="Yes"):
+                        #if (str($name1.name4.germline_vcf)):
+                        -neoepiscope merge -g "${germline_vcf}" "${somatic_vcf}" -o "${merged_vcf}" 2>/dev/null ;
                         #end if
-                #end if    
+        
+                #else if (str($name1.name4.germline_option)=="No"):
+                cp "${name1.somatic_vcf}" "${merged_vcf}" 2>/dev/null ;
+                #end if  
             #end if
         #end if
+           
 
-
-
-        #if str($name1.hapCUT2_OUTPUT)=="Yes" :
+        
+        #if (str($name1.hapCUT2_OUTPUT)=="Yes" ):
         neoepiscope call
         -c "${merged_hapCUT2_OUTPUT}" 
              
-            #if str($name2.affinity)=="No": 
+            #if (str($name2.affinity)=="No"): 
             --no-affinity 
-            #else if str($name2.affinity)=="Yes":
+            #else if (str($name2.affinity)=="Yes"):
             -p "${affinity_predictor_name}" "${affinity_predictor_version}" "${affinity_predictor_score}" -a "${alleles}"
             #end if
 
-            #if str($name3.build)=="hg19":
+            #if (str($name3.build)=="hg19"):
             -b hg19
             #end if
-            #if str($name3.build)=="GRCh38": 
+
+            #if (str($name3.build)=="GRCh38"): 
             -b GRCh38
             #end if
 
-            #if str($kmer)!="default":
+            #if (str($kmer)!="default"):
             -k "${kmer}"
             #end if
-        #end if
-        
         -o $output
         2>/dev/null
+        #end if
+         
     ]]>
+
     </command>
     <inputs>
         <!--genome build options-->
@@ -64,21 +73,22 @@
 
         <!--vcf processing inputs-->
         <conditional name="name1">
-            <param name="hapCUT2_OUTPUT" type="boolean" truevalue="Yes" falsevalue="No" label="Do you already have a hapCUT2 processed output from your somatic vcf file? " />
-            <when value="Yes">
-                <param name="merged_hapCUT2_OUTPUT" type="data" label="Input hapCUT2 output from your vcf file" />
-            </when>
+            <param name="hapCUT2_OUTPUT" type="boolean" truevalue="Yes" falsevalue="No" label="Do you already have a hapCUT2 processed output from your somatic vcf file? ">
+            </param>
             <when value="No">
-                <param name="somatic_vcf" type="data" format="vcf" label="Input your somatic vcf file for processing." />
+                <param type="data" name ="somatic_vcf" format="vcf" label="Input your somatic vcf file for processing."/>
                 
-                <conditional>
+                <conditional name="name4">
                     <param name="germline_option" type="boolean" truevalue="Yes" falsevalue="No" label="Would you like to include germline variation in the neoepitope prediction? Choosing Yes would require a germline vcf file" />
-                        <when value="No"/>
                         <when value="Yes">
                             <param name="germline_vcf" type="data" format="vcf" label="Input your germline vcf file for processing." />
                         </when> 
-            </conditional>
+                </conditional>
             </when>
+            <when value="Yes">
+                <param name="merged_hapCUT2_OUTPUT" type="data" label="Input hapCUT2 output from your vcf file" />
+            </when>
+            
         </conditional>
 
         <conditional name="name2">
@@ -91,6 +101,7 @@
             </when>
         </conditional>
         
+
         <param name="kmer" type="select" label="Select your preferred k-mer size from the drop down list." >
                 <option value="default">default</option>
                 <option value="80">80</option>
@@ -99,12 +110,17 @@
 
     </inputs>
     <outputs>
-        <data name="dict_path" label="pickled dictionaries" />
-            <filter>$name3.build=="uploadBuild"</filter>
-        <data name="output" format="tsv" label="Neoepitopes found" />
+        <data format="vcf" name="merged_vcf" label="Merged vcf">
+            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
+        </data>
+        <data name="dict_path" label="pickled dictionaries">
+            <filter>name3['build']=="uploadBuild"</filter>
+        </data>
+        <data name="output" format="tsv" label="Neoepitopes found"/>     
     </outputs>
+
     <help><![CDATA[
-       Wraps 
+       Calls neoepitopes 
     ]]></help>
 
 </tool>
