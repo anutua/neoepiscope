@@ -111,13 +111,39 @@
     </inputs>
     <outputs>
         <data format="vcf" name="merged_vcf" label="Merged vcf">
-            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
+            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
         </data>
+
         <data name="dict_path" label="pickled dictionaries">
             <filter>name3['build']=="uploadBuild"</filter>
         </data>
-        <data name="output" format="tsv" label="Neoepitopes found"/>     
+        <data name="output" format="tsv" label="Neoepitopes found">
+            <filter> name1['hapCUT2_OUTPUT'] is True </filter>
+        </data>   
     </outputs>
+
+    <tests>
+        <test>
+            <conditional name="name1">
+                <param name="hapCUT2_OUTPUT" value="No"/>
+            </conditional> 
+            <output name="dict_path"/>
+        </test>
+
+        <test>
+            <conditional name="name1">
+                <param name="hapCUT2_OUTPUT" value="Yes"/>
+            </conditional> 
+            <output name="output"/>
+        </test>
+        
+        <test>
+            <conditional name="name3">
+                <param name="build" value="uploadBuild"/>
+            </conditional> 
+            <output name="merged_vcf"/>
+        </test>
+    </tests>
 
     <help><![CDATA[
        Calls neoepitopes 
