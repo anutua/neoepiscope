@@ -6,6 +6,7 @@
     <command>
         go to hapcut2 directory first
     <![CDATA[ 
+        cd ~/HapCUT2 &&
          ./build/extractHAIRS --bam $sorted_bam --VCF $vcf --out $fragment_file &&
 
          ./build/HAPCUT2 --fragments $fragment_file --VCF $vcf --output $output

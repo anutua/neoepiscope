@@ -10,26 +10,53 @@
         #if str($name3.build)=="uploadBuild": 
         neoepiscope index
         -g "${GTF}" -d "${dict_path}" 
-        2>/dev/null;
+        2>/dev/null &&
         #end if
         
 
-      
+        
+
         #if str($name1.hapCUT2_OUTPUT)=="No":
             #if ($name1.somatic_vcf):
                 #if (str($name1.name4.germline_option)=="Yes"):
                         #if (str($name1.name4.germline_vcf)):
-                        -neoepiscope merge -g "${germline_vcf}" "${somatic_vcf}" -o "${merged_vcf}" 2>/dev/null ;
+                        -neoepiscope merge -g "${germline_vcf}" "${somatic_vcf}" -o "${merged_vcf}" 2>/dev/null &&
                         #end if
         
                 #else if (str($name1.name4.germline_option)=="No"):
-                cp "${name1.somatic_vcf}" "${merged_vcf}" 2>/dev/null ;
-                #end if  
+                cp "${name1.somatic_vcf}" "${merged_vcf}" 2>/dev/null &&
+                #end if 
+                
+                -neoepiscope swap -i "${merged_vcf}" -o "${swapped_vcf}" 2>/dev/null &&
+                cd ~/HapCUT2 &&
+                ./build/extractHAIRS --bam $sorted_bam --VCF $merged_vcf --out $fragment_file &&
+
+                ./build/HAPCUT2 --fragments $fragment_file --VCF $merged_vcf --output $adjusted_Hapcut_output &&
             #end if
+        
+        neoepiscope call
+        -c "${adjusted_Hapcut_output}" 
+
+            #if (str($name2.affinity)=="No"): 
+            --no-affinity 
+            #else if (str($name2.affinity)=="Yes"):
+            -p "${affinity_predictor_name}" "${affinity_predictor_version}" "${affinity_predictor_score}" -a "${alleles}"
+            #end if
+
+            #if (str($name3.build)=="hg19"):
+            -b hg19
+            #end if
+
+            #if (str($name3.build)=="GRCh38"): 
+            -b GRCh38
+            #end if
+
+            #if (str($kmer)!="default"):
+            -k "${kmer}"
+            #end if
+        -o $output
         #end if
            
-
-        
         #if (str($name1.hapCUT2_OUTPUT)=="Yes" ):
         neoepiscope call
         -c "${merged_hapCUT2_OUTPUT}" 
@@ -52,8 +79,10 @@
             -k "${kmer}"
             #end if
         -o $output
-        2>/dev/null
         #end if
+
+        2>/dev/null
+        
          
     ]]>
 
@@ -61,34 +90,33 @@
     <inputs>
         <!--genome build options-->
         <conditional name="name3">
-            <param name="build" type="select" label="Please select your preferred genome build from the drop down list." >
+            <param name="build" type="select" label="Select your preferred genome build." >
                 <option value="hg19">hg19</option>
                 <option value="GRCh38">GRCh38</option>
                 <option value="uploadBuild">Upload genome build</option>
             </param>
             <when value="uploadBuild">
-                <param name="GTF" type="data" label="Upload your GTF" />
+                <param name="GTF" type="data" label="Upload a gene annotation (GTF) file consistent with the selected genome build." />
             </when>
         </conditional>
 
         <!--vcf processing inputs-->
         <conditional name="name1">
-            <param name="hapCUT2_OUTPUT" type="boolean" truevalue="Yes" falsevalue="No" label="Do you already have a hapCUT2 processed output from your somatic vcf file? ">
+            <param name="hapCUT2_OUTPUT" type="boolean" truevalue="Yes" falsevalue="No" label="Do you already have HapCUT2-processed output from your somatic and/or germline VCF file(s)? ">
             </param>
             <when value="No">
-                <param type="data" name ="somatic_vcf" format="vcf" label="Input your somatic vcf file for processing."/>
-                
+                <param type="data" name ="somatic_vcf" format="vcf" label="Upload a somatic VCF file."/>
                 <conditional name="name4">
-                    <param name="germline_option" type="boolean" truevalue="Yes" falsevalue="No" label="Would you like to include germline variation in the neoepitope prediction? Choosing Yes would require a germline vcf file" />
+                    <param name="germline_option" type="boolean" truevalue="Yes" falsevalue="No" label="Would you like to take into account germline variation in this neoepitope prediction pipeline? Selecting Yes requires as additional input a germline VCF file" />
                         <when value="Yes">
-                            <param name="germline_vcf" type="data" format="vcf" label="Input your germline vcf file for processing." />
+                            <param name="germline_vcf" type="data" format="vcf" label="Upload a germline VCF file." />
                         </when> 
                 </conditional>
+                <param type="data" name ="sorted_bam" format="bam" label="Upload a sorted bam file."/>
             </when>
             <when value="Yes">
-                <param name="merged_hapCUT2_OUTPUT" type="data" label="Input hapCUT2 output from your vcf file" />
+                <param name="merged_hapCUT2_OUTPUT" type="data" label="Upload HapCUT2 output file." />
             </when>
-            
         </conditional>
 
         <conditional name="name2">
@@ -97,12 +125,12 @@
                 <param name="affinity_predictor_name" type="select" label="Select your software" />
                 <param name="affinity_predictor_version" type="select" label="Select its version number" />
                 <param name="affinity_predictor_score" type="select" label="Select its score" />
-                <param name="alleles" type="data" format="csv" label="Binding affinity predictors require a list of alleles. Please upload your allele file in csv format" />                
+                <param name="alleles" type="data" format="csv" label="Binding affinity predictors require a list of alleles. Please upload your allele file in csv format" />        
             </when>
         </conditional>
         
 
-        <param name="kmer" type="select" label="Select your preferred k-mer size from the drop down list." >
+        <param name="kmer" type="select" label="Select a preferred kmer size from the drop down list." >
                 <option value="default">default</option>
                 <option value="80">80</option>
                 <option value="100">100</option>
@@ -110,16 +138,27 @@
 
     </inputs>
     <outputs>
-        <data format="vcf" name="merged_vcf" label="Merged vcf">
-            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
-        </data>
 
         <data name="dict_path" label="pickled dictionaries">
             <filter>name3['build']=="uploadBuild"</filter>
         </data>
+        <data format="vcf" name="merged_vcf" label="Merged vcf">
+            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
+        </data>
+        <data format="vcf" name="swapped_vcf" label="swapped vcf">
+            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
+        </data>
+
+        <data format="vcf" name="fragment_file" label="fragment file">
+            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
+        </data>
+        <data format="vcf" name="adjusted_Hapcut_output" label="Adjusted Hapcut2 Output">
+            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
+        </data>
+
         <data name="output" format="tsv" label="Neoepitopes found">
-            <filter> name1['hapCUT2_OUTPUT'] is True </filter>
-        </data>   
+        </data>  
+
     </outputs>
 
     <tests>
@@ -127,21 +166,17 @@
             <conditional name="name1">
                 <param name="hapCUT2_OUTPUT" value="No"/>
             </conditional> 
-            <output name="dict_path"/>
+            <output name="merged_vcf"/>
+            <output name="swapped_vcf"/>
+            <output name="fragment_file"/>
+            <output name="adjusted_Hapcut_output"/>
         </test>
 
-        <test>
-            <conditional name="name1">
-                <param name="hapCUT2_OUTPUT" value="Yes"/>
-            </conditional> 
-            <output name="output"/>
-        </test>
-        
         <test>
             <conditional name="name3">
                 <param name="build" value="uploadBuild"/>
             </conditional> 
-            <output name="merged_vcf"/>
+            <output name="dict_path"/>
         </test>
     </tests>
 
