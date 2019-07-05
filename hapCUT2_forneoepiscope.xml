@@ -1,0 +1,36 @@
+<tool id="HapCUT2Wrapper" name="HapCUT2WrapperForNeoepiscope" version="0.1.0" python_template_version="3.5">
+    
+    <requirements>
+    </requirements>
+    
+    <command>
+        go to hapcut2 directory first
+    <![CDATA[ 
+         ./build/extractHAIRS --bam $sorted_bam --VCF $vcf --out $fragment_file &&
+
+         ./build/HAPCUT2 --fragments $fragment_file --VCF $vcf --output $output
+        
+        2>/dev/null
+    ]]>
+    </command>
+
+    <inputs>	
+        <param name="sorted_bam" type="data" format="bam" label="Input sorted bam file" />
+        <param name="vcf" type="data" format="vcf" label="Input vcf file" />
+    </inputs>
+
+    <outputs>
+        <data name="fragment_file" label="fragment file" />
+        <data name="output" label="Haplotype Output file" />
+    </outputs>
+    
+    <tests>
+        
+    </tests>
+
+    <help><![CDATA[
+       Wraps 
+    ]]></help>
+
+</tool>
+
