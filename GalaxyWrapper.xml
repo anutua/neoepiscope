@@ -12,26 +12,29 @@
         -g "${GTF}" -d "${dict_path}" 
         2>/dev/null &&
         #end if
-        
+       
 
         
-
+       
         #if str($name1.hapCUT2_OUTPUT)=="No":
             #if ($name1.somatic_vcf):
+            neoepiscope swap -i "${name1.somatic_vcf}" -o "${swapped_somatic}" 2>/dev/null &&
+                
                 #if (str($name1.name4.germline_option)=="Yes"):
-                        #if (str($name1.name4.germline_vcf)):
-                        -neoepiscope merge -g "${germline_vcf}" "${somatic_vcf}" -o "${merged_vcf}" 2>/dev/null &&
+                        #if ($name1.name4.germline_vcf):
+                        neoepiscope swap -i "${name1.name4.germline_vcf}" -o "${swapped_germline}" 2>/dev/null &&
+                        neoepiscope merge -g "${swapped_germline}" -s "${swapped_somatic}" -o "${merged_vcf}" 2>/dev/null &&
                         #end if
-        
+
                 #else if (str($name1.name4.germline_option)=="No"):
-                cp "${name1.somatic_vcf}" "${merged_vcf}" 2>/dev/null &&
+                cp "${swapped_somatic}" "${merged_vcf}" 2>/dev/null &&
                 #end if 
                 
-                -neoepiscope swap -i "${merged_vcf}" -o "${swapped_vcf}" 2>/dev/null &&
+                
                 cd ~/HapCUT2 &&
-                ./build/extractHAIRS --bam $sorted_bam --VCF $merged_vcf --out $fragment_file &&
+                ./build/extractHAIRS --bam $sorted_bam --VCF $merged_vcf --out $fragment_file 2>/dev/null&&
 
-                ./build/HAPCUT2 --fragments $fragment_file --VCF $merged_vcf --output $adjusted_Hapcut_output &&
+                ./build/HAPCUT2 --fragments $fragment_file --VCF $merged_vcf --output $adjusted_Hapcut_output 2>/dev/null&&
             #end if
         
         neoepiscope call
@@ -142,13 +145,15 @@
         <data name="dict_path" label="pickled dictionaries">
             <filter>name3['build']=="uploadBuild"</filter>
         </data>
+        <data format="vcf" name="swapped_somatic" label="swapped somatic">
+            <filter> name1['name4['germline_option']'] is False </filter>
+        </data>
+         <data format="vcf" name="swapped_germline" label="swapped germline">
+            <filter> name1['name4['germline_option']'] is True </filter>
+        </data>
         <data format="vcf" name="merged_vcf" label="Merged vcf">
             <filter> name1['hapCUT2_OUTPUT'] is False </filter>
         </data>
-        <data format="vcf" name="swapped_vcf" label="swapped vcf">
-            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
-        </data>
-
         <data format="vcf" name="fragment_file" label="fragment file">
             <filter> name1['hapCUT2_OUTPUT'] is False </filter>
         </data>
@@ -165,13 +170,28 @@
         <test>
             <conditional name="name1">
                 <param name="hapCUT2_OUTPUT" value="No"/>
+                <conditional name="name4">
+                    <param name="germline_option" value="No"/>
+                </conditional>
             </conditional> 
+            <output name="swapped_somatic"/>
             <output name="merged_vcf"/>
-            <output name="swapped_vcf"/>
             <output name="fragment_file"/>
             <output name="adjusted_Hapcut_output"/>
         </test>
-
+        <test>
+            <conditional name="name1">
+                <param name="hapCUT2_OUTPUT" value="No"/>
+                <conditional name="name4">
+                    <param name="germline_option" value="Yes"/>
+                </conditional>
+            </conditional> 
+            <output name="swapped_somatic"/>
+            <output name="swapped_germline"/>
+            <output name="merged_vcf"/>
+            <output name="fragment_file"/>
+            <output name="adjusted_Hapcut_output"/>
+        </test>
         <test>
             <conditional name="name3">
                 <param name="build" value="uploadBuild"/>
