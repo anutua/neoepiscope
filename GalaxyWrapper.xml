@@ -9,7 +9,7 @@
 
         #if str($name3.build)=="uploadBuild": 
         neoepiscope index
-        -g "${GTF}" -d "${dict_path}" 
+        -g "${GTF}" -d dict_path 
         2>/dev/null &&
         #end if
        
@@ -29,7 +29,6 @@
                 #else if (str($name1.name4.germline_option)=="No"):
                 cp "${swapped_somatic}" "${merged_vcf}" 2>/dev/null &&
                 #end if 
-                
                 
                 cd ~/HapCUT2 &&
                 ./build/extractHAIRS --bam $sorted_bam --VCF $merged_vcf --out $fragment_file 2>/dev/null&&
