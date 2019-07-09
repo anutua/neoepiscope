@@ -33,9 +33,10 @@
                 cd ~/HapCUT2 &&
                 ./build/extractHAIRS --bam $sorted_bam --VCF $merged_vcf --out $fragment_file 2>/dev/null&&
 
-                ./build/HAPCUT2 --fragments $fragment_file --VCF $merged_vcf --output $adjusted_Hapcut_output 2>/dev/null&&
+                ./build/HAPCUT2 --fragments $fragment_file --VCF $merged_vcf --output $Hapcut_output 2>/dev/null&&
             #end if
         
+        neoepiscope prep -v $merged_vcf -c $Hapcut_output -o $adjusted_Hapcut_output 2>/dev/null &&
         neoepiscope call
         -c "${adjusted_Hapcut_output}" 
 
@@ -139,8 +140,8 @@
         </param>
 
     </inputs>
+    
     <outputs>
-
         <data name="dict_path" label="pickled dictionaries">
             <filter>name3['build']=="uploadBuild"</filter>
         </data>
@@ -154,6 +155,9 @@
             <filter> name1['hapCUT2_OUTPUT'] is False </filter>
         </data>
         <data format="vcf" name="fragment_file" label="fragment file">
+            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
+        </data>
+        <data format="vcf" name="Hapcut_output" label="Hapcut2 Output">
             <filter> name1['hapCUT2_OUTPUT'] is False </filter>
         </data>
         <data format="vcf" name="adjusted_Hapcut_output" label="Adjusted Hapcut2 Output">
@@ -176,6 +180,7 @@
             <output name="swapped_somatic"/>
             <output name="merged_vcf"/>
             <output name="fragment_file"/>
+            <output name="Hapcut_output"/>
             <output name="adjusted_Hapcut_output"/>
         </test>
         <test>
@@ -189,6 +194,7 @@
             <output name="swapped_germline"/>
             <output name="merged_vcf"/>
             <output name="fragment_file"/>
+            <output name="Hapcut_output"/>
             <output name="adjusted_Hapcut_output"/>
         </test>
         <test>
