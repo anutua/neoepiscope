@@ -206,8 +206,14 @@
     </tests>
 
     <help><![CDATA[
-       Calls neoepitopes 
-    ]]></help>
+       **neoepiscope**
+
+       Calls neoepitopes given a somatic and/or germline vcf file(s)
+       Options:
+       genome build binding affinity predictions kmer size 
+    ]]>
+        
+    </help>
 
 </tool>
 
