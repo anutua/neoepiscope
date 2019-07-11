@@ -1,7 +1,10 @@
-<!--Assumes $neoepiscope download has been run afer installation. All default dependency files present-->
+<!--Assumes $neoepiscope download has been run afer installation.-->
 <tool id="neoepiscopeWrapper2" name="neoepiscope_neoepitope " version="0.1.0" python_template_version="3.5">
     
     <requirements>
+        <requirement type="package" version="0.3.5">neoepiscope</requirement>
+        <requirement type="package" version="2.3.4.1">bowtie2</requirement>
+        <requirement type="package" version="1.9">samtools</requirement>
     </requirements>
 
     <!--Specify the command to be passed to terminal based on the user inputs for neoepiscope. Runs neoepiscope index and neoepiscope call-->
