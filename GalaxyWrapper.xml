@@ -13,10 +13,7 @@
         2>/dev/null &&
         #end if
        
-
-        
-       
-        #if str($name1.hapCUT2_OUTPUT)=="No":
+        #if (str($name1.hapCUT2_OUTPUT)=="No"):
             #if ($name1.somatic_vcf):
             neoepiscope swap -i "${name1.somatic_vcf}" -o "${swapped_somatic}" 2>/dev/null &&
                 
@@ -38,52 +35,36 @@
         
         neoepiscope prep -v $merged_vcf -c $Hapcut_output -o $adjusted_Hapcut_output 2>/dev/null &&
         neoepiscope call
-        -c "${adjusted_Hapcut_output}" 
-
-            #if (str($name2.affinity)=="No"): 
-            --no-affinity 
-            #else if (str($name2.affinity)=="Yes"):
-            -p "${affinity_predictor_name}" "${affinity_predictor_version}" "${affinity_predictor_score}" -a "${alleles}"
-            #end if
-
-            #if (str($name3.build)=="hg19"):
-            -b hg19
-            #end if
-
-            #if (str($name3.build)=="GRCh38"): 
-            -b GRCh38
-            #end if
-
-            #if (str($kmer)!="default"):
-            -k "${kmer}"
-            #end if
-        -o $output
+        -c "${adjusted_Hapcut_output}"
         #end if
            
-        #if (str($name1.hapCUT2_OUTPUT)=="Yes" ):
+        #if (str($name1.hapCUT2_OUTPUT)=="Yes"):
         neoepiscope call
         -c "${merged_hapCUT2_OUTPUT}" 
-             
-            #if (str($name2.affinity)=="No"): 
-            --no-affinity 
-            #else if (str($name2.affinity)=="Yes"):
-            -p "${affinity_predictor_name}" "${affinity_predictor_version}" "${affinity_predictor_score}" -a "${alleles}"
-            #end if
-
-            #if (str($name3.build)=="hg19"):
-            -b hg19
-            #end if
-
-            #if (str($name3.build)=="GRCh38"): 
-            -b GRCh38
-            #end if
-
-            #if (str($kmer)!="default"):
-            -k "${kmer}"
-            #end if
-        -o $output
         #end if
 
+        #if (str($name2.affinity)=="No"): 
+        --no-affinity 
+        #else if (str($name2.affinity)=="Yes"):
+        -p "${affinity_predictor_name}" "${affinity_predictor_version}" "${affinity_predictor_score}" -a "${alleles}"
+        #end if
+
+        #if (str($name3.build)=="hg19"):
+        -b hg19
+        #else if (str($name3.build)=="GRCh38"): 
+        -b GRCh38
+        #end if
+
+        #if (str($name5.kmer)!="default"):
+        #else if (str($name5.kmer)=="Specify"):
+            #if (str($name5.name6.kmer_size_option)="Single value"):
+            -k "${kmer_single_value}"
+            #else if (str($name5.name6.kmer_size_option)="Range"):
+            -k "${kmer_range_min}","${kmer_range_max}"
+             #end if
+        #end if
+
+        -o $output
         2>/dev/null
         
          
@@ -138,13 +119,28 @@
             </when>
         </conditional>
         
-
-        <param name="kmer" type="select" label="Select a preferred kmer size from the drop down list." >
+        <conditional name="name5">
+            <param name="kmer" type="select" label="Select preferred amino acid size of kmers.">
                 <option value="default">default</option>
-                <option value="80">80</option>
-                <option value="100">100</option>
-        </param>
-
+                <option value="Specify">Specify</option>
+            </param>
+            <when value="default" />
+            <when value="Specify">
+                <conditional name="name6">
+                    <param name="kmer_size_option" type="select" label="Single value or Range?">
+                        <option value="Single value">Single value</option>
+                        <option value="Range">Range</option>
+                    </param>
+                        <when value="Single value">
+                            <param name="kmer_single_value" type="integer" min="1" value="100" label="Select number of amino acids"/>
+                        </when>
+                        <when value="Range">
+                            <param name="kmer_range_min" type="integer" min="1" value="1" label="Select minimum" />
+                            <param name="kmer_range_max" type="integer" min="1" value="1000" label="Select maximum" />
+                        </when>
+                </conditional>      
+            </when> 
+        </conditional>
     </inputs>
     
     <outputs>
