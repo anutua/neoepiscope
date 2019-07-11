@@ -105,15 +105,21 @@
 
         <!--vcf processing inputs-->
         <conditional name="name1">
-            <param name="hapCUT2_OUTPUT" type="boolean" truevalue="Yes" falsevalue="No" label="Do you already have HapCUT2-processed output from your somatic and/or germline VCF file(s)? ">
+            <param name="hapCUT2_OUTPUT" type="select" label="Do you already have HapCUT2-processed output from your somatic and/or germline VCF file(s)? ">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
             </param>
             <when value="No">
                 <param type="data" name ="somatic_vcf" format="vcf" label="Upload a somatic VCF file."/>
                 <conditional name="name4">
-                    <param name="germline_option" type="boolean" truevalue="Yes" falsevalue="No" label="Would you like to take into account germline variation in this neoepitope prediction pipeline? Selecting Yes requires as additional input a germline VCF file" />
+                    <param name="germline_option" type="select" label="Would you like to take into account germline variation in this neoepitope prediction pipeline? Selecting Yes requires as additional input a germline VCF file" >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </param>
                         <when value="Yes">
                             <param name="germline_vcf" type="data" format="vcf" label="Upload a germline VCF file." />
                         </when> 
+                        <when value="No"/>
                 </conditional>
                 <param type="data" name ="sorted_bam" format="bam" label="Upload a sorted bam file."/>
             </when>
@@ -146,22 +152,22 @@
             <filter>name3['build']=="uploadBuild"</filter>
         </data>
         <data format="vcf" name="swapped_somatic" label="swapped somatic">
-            <filter> name1['name4['germline_option']'] is False </filter>
+            <filter>(name1['hapCUT2_OUTPUT']=="No") </filter>
         </data>
          <data format="vcf" name="swapped_germline" label="swapped germline">
-            <filter> name1['name4['germline_option']'] is True </filter>
+            <filter>(name1['hapCUT2_OUTPUT']=="No") and (name1['name4']['germline_option']=="Yes")</filter>
         </data>
         <data format="vcf" name="merged_vcf" label="Merged vcf">
-            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
+            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
         </data>
         <data format="vcf" name="fragment_file" label="fragment file">
-            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
+            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
         </data>
         <data format="vcf" name="Hapcut_output" label="Hapcut2 Output">
-            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
+            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
         </data>
         <data format="vcf" name="adjusted_Hapcut_output" label="Adjusted Hapcut2 Output">
-            <filter> name1['hapCUT2_OUTPUT'] is False </filter>
+            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
         </data>
 
         <data name="output" format="tsv" label="Neoepitopes found">
@@ -170,9 +176,17 @@
     </outputs>
 
     <tests>
-        <test>
+        <test expect_num_outputs="1">
+            <conditional name="name1">
+                <param name="hapCUT2_OUTPUT" value="Yes"/>
+                <param name="merged_hapCUT2_OUTPUT"/>
+            </conditional>
+            <output name="output"/>
+        </test>
+        <test expect_num_outputs="6">
             <conditional name="name1">
                 <param name="hapCUT2_OUTPUT" value="No"/>
+                <param name="somatic_vcf"/>
                 <conditional name="name4">
                     <param name="germline_option" value="No"/>
                 </conditional>
@@ -182,12 +196,15 @@
             <output name="fragment_file"/>
             <output name="Hapcut_output"/>
             <output name="adjusted_Hapcut_output"/>
+            <output name="output"/>
         </test>
-        <test>
+        <test expect_num_outputs="7">
             <conditional name="name1">
                 <param name="hapCUT2_OUTPUT" value="No"/>
+                <param name="somatic_vcf"/>
                 <conditional name="name4">
                     <param name="germline_option" value="Yes"/>
+                    <param name="germline_vcf"/>
                 </conditional>
             </conditional> 
             <output name="swapped_somatic"/>
@@ -196,6 +213,7 @@
             <output name="fragment_file"/>
             <output name="Hapcut_output"/>
             <output name="adjusted_Hapcut_output"/>
+            <output name="output"/>
         </test>
         <test>
             <conditional name="name3">
