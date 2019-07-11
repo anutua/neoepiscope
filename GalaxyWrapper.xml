@@ -34,13 +34,11 @@
             #end if
         
         neoepiscope prep -v $merged_vcf -c $Hapcut_output -o $adjusted_Hapcut_output 2>/dev/null &&
-        neoepiscope call
-        -c "${adjusted_Hapcut_output}"
+        neoepiscope call -c "${adjusted_Hapcut_output}"
         #end if
            
         #if (str($name1.hapCUT2_OUTPUT)=="Yes"):
-        neoepiscope call
-        -c "${merged_hapCUT2_OUTPUT}" 
+        neoepiscope call -c "${merged_hapCUT2_OUTPUT}" 
         #end if
 
         #if (str($name2.affinity)=="No"): 
@@ -55,19 +53,18 @@
         -b GRCh38
         #end if
 
-        #if (str($name5.kmer)!="default"):
+        #if (str($name5.kmer)=="default"):
+
         #else if (str($name5.kmer)=="Specify"):
-            #if (str($name5.name6.kmer_size_option)="Single value"):
+            #if (str($name5.name6.kmer_size_option)=="Single value"):
             -k "${kmer_single_value}"
-            #else if (str($name5.name6.kmer_size_option)="Range"):
+            #else if (str($name5.name6.kmer_size_option)=="Range"):
             -k "${kmer_range_min}","${kmer_range_max}"
-             #end if
+            #end if
         #end if
 
         -o $output
         2>/dev/null
-        
-         
     ]]>
 
     </command>
@@ -108,7 +105,7 @@
                 <param name="merged_hapCUT2_OUTPUT" type="data" label="Upload HapCUT2 output file." />
             </when>
         </conditional>
-
+        <!--binding affinity predictions-->
         <conditional name="name2">
             <param name="affinity" type="boolean" truevalue="Yes" falsevalue="No" label="Should binding affinity be calculated?" />
             <when value="Yes">
@@ -118,7 +115,7 @@
                 <param name="alleles" type="data" format="csv" label="Binding affinity predictors require a list of alleles. Please upload your allele file in csv format" />        
             </when>
         </conditional>
-        
+        <!--kmer sizing-->
         <conditional name="name5">
             <param name="kmer" type="select" label="Select preferred amino acid size of kmers.">
                 <option value="default">default</option>
@@ -148,27 +145,25 @@
             <filter>name3['build']=="uploadBuild"</filter>
         </data>
         <data format="vcf" name="swapped_somatic" label="swapped somatic">
-            <filter>(name1['hapCUT2_OUTPUT']=="No") </filter>
+            <filter>name1['hapCUT2_OUTPUT']=="No"</filter>
         </data>
          <data format="vcf" name="swapped_germline" label="swapped germline">
             <filter>(name1['hapCUT2_OUTPUT']=="No") and (name1['name4']['germline_option']=="Yes")</filter>
         </data>
         <data format="vcf" name="merged_vcf" label="Merged vcf">
-            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
+            <filter> name1['hapCUT2_OUTPUT']=="No"</filter>
         </data>
         <data format="vcf" name="fragment_file" label="fragment file">
-            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
+            <filter> name1['hapCUT2_OUTPUT']=="No"</filter>
         </data>
         <data format="vcf" name="Hapcut_output" label="Hapcut2 Output">
-            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
+            <filter> name1['hapCUT2_OUTPUT']=="No"</filter>
         </data>
         <data format="vcf" name="adjusted_Hapcut_output" label="Adjusted Hapcut2 Output">
-            <filter> name1['hapCUT2_OUTPUT']=="No" </filter>
+            <filter> name1['hapCUT2_OUTPUT']=="No"</filter>
         </data>
-
         <data name="output" format="tsv" label="Neoepitopes found">
         </data>  
-
     </outputs>
 
     <tests>
@@ -211,7 +206,7 @@
             <output name="adjusted_Hapcut_output"/>
             <output name="output"/>
         </test>
-        <test>
+        <test expect_num_outputs="1">
             <conditional name="name3">
                 <param name="build" value="uploadBuild"/>
             </conditional> 
@@ -225,8 +220,7 @@
        Calls neoepitopes given a somatic and/or germline vcf file(s)
        Options:
        genome build binding affinity predictions kmer size 
-    ]]>
-        
+    ]]>    
     </help>
 
 </tool>
