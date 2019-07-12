@@ -80,7 +80,7 @@
                 <option value="uploadBuild">Upload genome build</option>
             </param>
             <when value="uploadBuild">
-                <param name="GTF" type="data" label="Upload a gene annotation (GTF) file consistent with the selected genome build." />
+                <param name="GTF" type="data" format="gtf" label="Upload a gene annotation (GTF) file consistent with the selected genome build." />
             </when>
         </conditional>
 
@@ -219,12 +219,16 @@
 
     <help><![CDATA[
        **neoepiscope**
-
        Calls neoepitopes given a somatic and/or germline vcf file(s)
        Options:
        genome build binding affinity predictions kmer size 
     ]]>    
     </help>
+
+    <citations>
+      <citation type="doi">10.1101/418129</citation>
+      <citation type="doi">10.1101/gr.213462.116</citation>
+    </citations>
 
 </tool>
 
