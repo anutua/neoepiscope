@@ -220,8 +220,23 @@
     <help><![CDATA[
        **neoepiscope**
        Calls neoepitopes given a somatic and/or germline vcf file(s)
-       Options:
-       genome build binding affinity predictions kmer size 
+       
+       Inputs(three options);
+
+       - HapCUT2 processed variant calls.
+
+       - Somatic variant call vcf file
+       - Sorted bam file
+
+       - Somatic variant call vcf file
+       - Sorted bam file
+       - Germline variant call vcf file
+       
+
+       Run Options:
+       - genome build 
+       - binding affinity predictions 
+       - kmer size 
     ]]>    
     </help>
 
