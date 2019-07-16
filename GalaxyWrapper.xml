@@ -223,17 +223,24 @@
        
        Inputs(three options);
 
+Option 2::
+
        - HapCUT2 processed variant calls.
+
+Option 2::
 
        - Somatic variant call vcf file
        - Sorted bam file
+
+Option 3::
 
        - Somatic variant call vcf file
        - Sorted bam file
        - Germline variant call vcf file
        
 
-       Run Options:
+       Run Options::
+
        - genome build 
        - binding affinity predictions 
        - kmer size 
