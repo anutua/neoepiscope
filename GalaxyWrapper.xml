@@ -8,7 +8,7 @@
     </requirements>
 
     <!--Specify the command to be passed to terminal based on the user inputs for neoepiscope. Runs neoepiscope index and neoepiscope call-->
-    <command><![CDATA[ 
+    <command detect_errors="exit_code"><![CDATA[ 
 
         #if str($name3.build)=="uploadBuild": 
         neoepiscope index
@@ -82,6 +82,8 @@
             <when value="uploadBuild">
                 <param name="GTF" type="data" format="gtf" label="Upload a gene annotation (GTF) file consistent with the selected genome build." />
             </when>
+            <when value="hg19"/>
+            <when value="GRCh38"/>
         </conditional>
 
         <!--vcf processing inputs-->
@@ -105,18 +107,19 @@
                 <param type="data" name ="sorted_bam" format="bam" label="Upload a sorted bam file."/>
             </when>
             <when value="Yes">
-                <param name="merged_hapCUT2_OUTPUT" type="data" label="Upload HapCUT2 output file." />
+                <param name="merged_hapCUT2_OUTPUT" type="data" format="txt,vcf" label="Upload HapCUT2 output file." />
             </when>
         </conditional>
         <!--binding affinity predictions-->
         <conditional name="name2">
             <param name="affinity" type="boolean" truevalue="Yes" falsevalue="No" label="Should binding affinity be calculated?" />
             <when value="Yes">
-                <param name="affinity_predictor_name" type="select" label="Select your software" />
-                <param name="affinity_predictor_version" type="select" label="Select its version number" />
-                <param name="affinity_predictor_score" type="select" label="Select its score" />
+                <param name="affinity_predictor_name" type="text" label="Select your software" />
+                <param name="affinity_predictor_version" type="text" label="Select its version number" />
+                <param name="affinity_predictor_score" type="text" label="Select its score" />
                 <param name="alleles" type="data" format="csv" label="Binding affinity predictors require a list of alleles. Please upload your allele file in csv format" />        
             </when>
+            <when value="No"/>
         </conditional>
         <!--kmer sizing-->
         <conditional name="name5">
@@ -223,7 +226,7 @@
        
        Inputs(three options);
 
-Option 2::
+Option 1::
 
        - HapCUT2 processed variant calls.
 
