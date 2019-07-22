@@ -1,32 +1,32 @@
-<!--Assumes $neoepiscope download has been run afer installation.-->
+ <!--Assumes $neoepiscope download has been run afer installation.-->
 <tool id="neoepiscopeWrapper2" name="neoepiscope_neoepitope " version="0.1.0" python_template_version="3.5">
     
     <requirements>
-        <requirement type="package" version="0.3.5">neoepiscope</requirement>
+       
         <requirement type="package" version="2.3.4.1">bowtie2</requirement>
         <requirement type="package" version="1.9">samtools</requirement>
     </requirements>
 
     <!--Specify the command to be passed to terminal based on the user inputs for neoepiscope. Runs neoepiscope index and neoepiscope call-->
-    <command detect_errors="exit_code"><![CDATA[ 
+    <command ><![CDATA[ 
 
-        #if str($name3.build)=="uploadBuild": 
+        #if str($genome_build_conditional.build)=="uploadBuild": 
         neoepiscope index
         -g "${GTF}" -d dict_path 
         2>/dev/null &&
         #end if
        
-        #if (str($name1.hapCUT2_OUTPUT)=="No"):
-            #if ($name1.somatic_vcf):
-            neoepiscope swap -i "${name1.somatic_vcf}" -o "${swapped_somatic}" 2>/dev/null &&
+        #if (str($hapCUT2_OUTPUT_conditional.hapCUT2_OUTPUT)=="No"):
+            #if ($hapCUT2_OUTPUT_conditional.somatic_vcf):
+            neoepiscope swap -i "${hapCUT2_OUTPUT_conditional.somatic_vcf}" -o "${swapped_somatic}" 2>/dev/null &&
                 
-                #if (str($name1.name4.germline_option)=="Yes"):
-                        #if ($name1.name4.germline_vcf):
-                        neoepiscope swap -i "${name1.name4.germline_vcf}" -o "${swapped_germline}" 2>/dev/null &&
+                #if (str($hapCUT2_OUTPUT_conditional.germline_conditional.germline_option)=="Yes"):
+                        #if ($hapCUT2_OUTPUT_conditional.germline_conditional.germline_vcf):
+                        neoepiscope swap -i "${hapCUT2_OUTPUT_conditional.germline_conditional.germline_vcf}" -o "${swapped_germline}" 2>/dev/null &&
                         neoepiscope merge -g "${swapped_germline}" -s "${swapped_somatic}" -o "${merged_vcf}" 2>/dev/null &&
                         #end if
 
-                #else if (str($name1.name4.germline_option)=="No"):
+                #else if (str($hapCUT2_OUTPUT_conditional.germline_conditional.germline_option)=="No"):
                 cp "${swapped_somatic}" "${merged_vcf}" 2>/dev/null &&
                 #end if 
                 
@@ -40,28 +40,30 @@
         neoepiscope call -c "${adjusted_Hapcut_output}"
         #end if
            
-        #if (str($name1.hapCUT2_OUTPUT)=="Yes"):
+        #if (str($hapCUT2_OUTPUT_conditional.hapCUT2_OUTPUT)=="Yes"):
         neoepiscope call -c "${merged_hapCUT2_OUTPUT}" 
         #end if
 
-        #if (str($name2.affinity)=="No"): 
+        #if (str($affinity_conditional.affinity)=="No"): 
         --no-affinity 
-        #else if (str($name2.affinity)=="Yes"):
-        -p "${affinity_predictor_name}" "${affinity_predictor_version}" "${affinity_predictor_score}" -a "${alleles}"
         #end if
 
-        #if (str($name3.build)=="hg19"):
+        #if (str($affinity_conditional.affinity)=="Yes"):
+        -p "${affinity_conditional.affinity_predictor_name}" "${affinity_conditional.affinity_predictor_version}" "${affinity_conditional.affinity_predictor_score}" -a "${affinity_conditional.alleles}"
+        #end if
+
+        #if (str($genome_build_conditional.build)=="hg19"):
         -b hg19
-        #else if (str($name3.build)=="GRCh38"): 
+        #else if (str($genome_build_conditional.build)=="GRCh38"): 
         -b GRCh38
         #end if
 
-        #if (str($name5.kmer)=="default"):
+        #if (str($kmer_conditional.kmer)=="default"):
 
-        #else if (str($name5.kmer)=="Specify"):
-            #if (str($name5.name6.kmer_size_option)=="Single value"):
+        #else if (str($kmer_conditional.kmer)=="Specify"):
+            #if (str($kmer_conditional.kmer_size_conditional.kmer_size_option)=="Single value"):
             -k "${kmer_single_value}"
-            #else if (str($name5.name6.kmer_size_option)=="Range"):
+            #else if (str($kmer_conditional.kmer_size_conditional.kmer_size_option)=="Range"):
             -k "${kmer_range_min}","${kmer_range_max}"
             #end if
         #end if
@@ -73,7 +75,7 @@
     </command>
     <inputs>
         <!--genome build options-->
-        <conditional name="name3">
+        <conditional name="genome_build_conditional">
             <param name="build" type="select" label="Select your preferred genome build." >
                 <option value="hg19">hg19</option>
                 <option value="GRCh38">GRCh38</option>
@@ -87,14 +89,14 @@
         </conditional>
 
         <!--vcf processing inputs-->
-        <conditional name="name1">
+        <conditional name="hapCUT2_OUTPUT_conditional">
             <param name="hapCUT2_OUTPUT" type="select" label="Do you already have HapCUT2-processed output from your somatic and/or germline VCF file(s)? ">
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
             </param>
             <when value="No">
                 <param type="data" name ="somatic_vcf" format="vcf" label="Upload a somatic VCF file."/>
-                <conditional name="name4">
+                <conditional name="germline_conditional">
                     <param name="germline_option" type="select" label="Would you like to take into account germline variation in this neoepitope prediction pipeline? Selecting Yes requires as additional input a germline VCF file" >
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
@@ -111,25 +113,35 @@
             </when>
         </conditional>
         <!--binding affinity predictions-->
-        <conditional name="name2">
-            <param name="affinity" type="boolean" truevalue="Yes" falsevalue="No" label="Should binding affinity be calculated?" />
+        <conditional name="affinity_conditional">
+            <param name="affinity" type="select" label="Should binding affinity be calculated?" >
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </param>
             <when value="Yes">
-                <param name="affinity_predictor_name" type="text" label="Select your software" />
-                <param name="affinity_predictor_version" type="text" label="Select its version number" />
-                <param name="affinity_predictor_score" type="text" label="Select its score" />
-                <param name="alleles" type="data" format="csv" label="Binding affinity predictors require a list of alleles. Please upload your allele file in csv format" />        
+                <param name="affinity_predictor_name" type="select" label="Select your software">
+                    <option value="MHCflurry">MHCflurry</option>
+                    <option value="MHCnuggets">MHCnuggets</option>
+                </param>
+                <param name="affinity_predictor_version" type="text" label="Type the version number" />
+                <param name="affinity_predictor_score" type="select" label="Select its scoring method">
+                    <option value="affinity">affinity</option>
+                    <option value="rank">rank</option>
+                    <option value="affinity,rank">affinity and rank</option>
+                </param>
+                <param name="alleles" type="text" label="Binding affinity predictors require a list of alleles with this example format; [ HLA-A02:01 ] If using more than one alleles, separate with commas." />        
             </when>
             <when value="No"/>
         </conditional>
         <!--kmer sizing-->
-        <conditional name="name5">
-            <param name="kmer" type="select" label="Select preferred amino acid size of kmers.">
+        <conditional name="kmer_conditional">
+            <param name="kmer" type="select" label="Select preferred amino acid size of kmers.The default kmer size is a range 8-11 amino acids">
                 <option value="default">default</option>
                 <option value="Specify">Specify</option>
             </param>
             <when value="default" />
             <when value="Specify">
-                <conditional name="name6">
+                <conditional name="kmer_size_conditional">
                     <param name="kmer_size_option" type="select" label="Single value or Range?">
                         <option value="Single value">Single value</option>
                         <option value="Range">Range</option>
@@ -144,29 +156,30 @@
                 </conditional>      
             </when> 
         </conditional>
+
     </inputs>
     
     <outputs>
         <data name="dict_path" label="pickled dictionaries">
-            <filter>name3['build']=="uploadBuild"</filter>
+            <filter>genome_build_conditional['build']=="uploadBuild"</filter>
         </data>
         <data format="vcf" name="swapped_somatic" label="swapped somatic">
-            <filter>name1['hapCUT2_OUTPUT']=="No"</filter>
+            <filter>hapCUT2_OUTPUT_conditional['hapCUT2_OUTPUT']=="No"</filter>
         </data>
          <data format="vcf" name="swapped_germline" label="swapped germline">
-            <filter>(name1['hapCUT2_OUTPUT']=="No") and (name1['name4']['germline_option']=="Yes")</filter>
+            <filter>(hapCUT2_OUTPUT_conditional['hapCUT2_OUTPUT']=="No") and (hapCUT2_OUTPUT_conditional['germline_conditional']['germline_option']=="Yes")</filter>
         </data>
         <data format="vcf" name="merged_vcf" label="Merged vcf">
-            <filter> name1['hapCUT2_OUTPUT']=="No"</filter>
+            <filter> hapCUT2_OUTPUT_conditional['hapCUT2_OUTPUT']=="No"</filter>
         </data>
         <data format="vcf" name="fragment_file" label="fragment file">
-            <filter> name1['hapCUT2_OUTPUT']=="No"</filter>
+            <filter> hapCUT2_OUTPUT_conditional['hapCUT2_OUTPUT']=="No"</filter>
         </data>
         <data format="vcf" name="Hapcut_output" label="Hapcut2 Output">
-            <filter> name1['hapCUT2_OUTPUT']=="No"</filter>
+            <filter> hapCUT2_OUTPUT_conditional['hapCUT2_OUTPUT']=="No"</filter>
         </data>
         <data format="vcf" name="adjusted_Hapcut_output" label="Adjusted Hapcut2 Output">
-            <filter> name1['hapCUT2_OUTPUT']=="No"</filter>
+            <filter> hapCUT2_OUTPUT_conditional['hapCUT2_OUTPUT']=="No"</filter>
         </data>
         <data name="output" format="tsv" label="Neoepitopes found">
         </data>  
@@ -174,20 +187,27 @@
 
     <tests>
         <test expect_num_outputs="1">
-            <conditional name="name1">
+            <conditional name="hapCUT2_OUTPUT_conditional">
                 <param name="hapCUT2_OUTPUT" value="Yes"/>
                 <param name="merged_hapCUT2_OUTPUT"/>
             </conditional>
+            <conditional name="affinity_conditional">
+                <param name="affinity" value="No"/>
+            </conditional>
             <output name="output"/>
         </test>
+
         <test expect_num_outputs="6">
-            <conditional name="name1">
+            <conditional name="hapCUT2_OUTPUT_conditional">
                 <param name="hapCUT2_OUTPUT" value="No"/>
                 <param name="somatic_vcf"/>
-                <conditional name="name4">
+                <conditional name="germline_conditional">
                     <param name="germline_option" value="No"/>
                 </conditional>
             </conditional> 
+            <conditional name="affinity_conditional">
+                <param name="affinity" value="No"/>
+            </conditional>
             <output name="swapped_somatic"/>
             <output name="merged_vcf"/>
             <output name="fragment_file"/>
@@ -195,15 +215,19 @@
             <output name="adjusted_Hapcut_output"/>
             <output name="output"/>
         </test>
+
         <test expect_num_outputs="7">
-            <conditional name="name1">
+            <conditional name="hapCUT2_OUTPUT_conditional">
                 <param name="hapCUT2_OUTPUT" value="No"/>
                 <param name="somatic_vcf"/>
-                <conditional name="name4">
+                <conditional name="germline_conditional">
                     <param name="germline_option" value="Yes"/>
                     <param name="germline_vcf"/>
                 </conditional>
             </conditional> 
+            <conditional name="affinity_conditional">
+                <param name="affinity" value="No"/>
+            </conditional>
             <output name="swapped_somatic"/>
             <output name="swapped_germline"/>
             <output name="merged_vcf"/>
@@ -212,11 +236,78 @@
             <output name="adjusted_Hapcut_output"/>
             <output name="output"/>
         </test>
+
         <test expect_num_outputs="1">
-            <conditional name="name3">
+            <conditional name="genome_build_conditional">
                 <param name="build" value="uploadBuild"/>
             </conditional> 
             <output name="dict_path"/>
+        </test>
+        
+        <!--Affinity yes-->
+        <test expect_num_outputs="1">
+            <conditional name="hapCUT2_OUTPUT_conditional">
+                <param name="hapCUT2_OUTPUT" value="Yes"/>
+                <param name="merged_hapCUT2_OUTPUT"/>
+            </conditional>
+            <conditional name="affinity_conditional">
+                <param name="affinity" value="Yes"/>
+                <param name="affinity_predictor_name"/>
+                <param name="affinity_predictor_version"/>
+                <param name="affinity_predictor_score"/>
+                <param name="alleles" />
+            </conditional>
+            <output name="output"/>
+        </test>
+
+        <test expect_num_outputs="7">
+            <conditional name="hapCUT2_OUTPUT_conditional">
+                <param name="hapCUT2_OUTPUT" value="No"/>
+                <param name="somatic_vcf"/>
+                <conditional name="germline_conditional">
+                    <param name="germline_option" value="Yes"/>
+                    <param name="germline_vcf"/>
+                </conditional>
+            </conditional> 
+            <conditional name="affinity_conditional">
+                <param name="affinity" value="Yes"/>
+                <param name="affinity_predictor_name"/>
+                <param name="affinity_predictor_version"/>
+                <param name="affinity_predictor_score"/>
+                <param name="alleles" />
+            </conditional>
+            <output name="swapped_somatic"/>
+            <output name="swapped_germline"/>
+            <output name="merged_vcf"/>
+            <output name="fragment_file"/>
+            <output name="Hapcut_output"/>
+            <output name="adjusted_Hapcut_output"/>
+            <output name="output"/>
+        </test>
+
+        <test expect_num_outputs="7">
+            <conditional name="hapCUT2_OUTPUT_conditional">
+                <param name="hapCUT2_OUTPUT" value="No"/>
+                <param name="somatic_vcf"/>
+                <conditional name="germline_conditional">
+                    <param name="germline_option" value="Yes"/>
+                    <param name="germline_vcf"/>
+                </conditional>
+            </conditional> 
+            <conditional name="affinity_conditional">
+                <param name="affinity" value="Yes"/>
+                <param name="affinity_predictor_name"/>
+                <param name="affinity_predictor_version"/>
+                <param name="affinity_predictor_score"/>
+                <param name="alleles" />
+            </conditional>
+            <output name="swapped_somatic"/>
+            <output name="swapped_germline"/>
+            <output name="merged_vcf"/>
+            <output name="fragment_file"/>
+            <output name="Hapcut_output"/>
+            <output name="adjusted_Hapcut_output"/>
+            <output name="output"/>
         </test>
     </tests>
 
