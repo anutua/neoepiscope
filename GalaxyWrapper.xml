@@ -7,36 +7,37 @@
         <requirement type="package" version="1.9">samtools</requirement>
     </requirements>
 
-    <!--Specify the command to be passed to terminal based on the user inputs for neoepiscope. Runs neoepiscope index and neoepiscope call-->
+    <!--Specify the command to be passed to terminal based on the user inputs for neoepiscope. Runs neoepiscope index and neoepiscope call
+    `2>&1` in command sections because galaxy sets tool state to error when stderr is detected-->
     <command ><![CDATA[ 
 
         #if str($genome_build_conditional.build)=="uploadBuild": 
         neoepiscope index
         -g "${GTF}" -d dict_path 
-        2>/dev/null &&
+        2>&1  &&
         #end if
        
         #if (str($hapCUT2_OUTPUT_conditional.hapCUT2_OUTPUT)=="No"):
             #if ($hapCUT2_OUTPUT_conditional.somatic_vcf):
-            neoepiscope swap -i "${hapCUT2_OUTPUT_conditional.somatic_vcf}" -o "${swapped_somatic}" 2>/dev/null &&
+            neoepiscope swap -i "${hapCUT2_OUTPUT_conditional.somatic_vcf}" -o "${swapped_somatic}" 2>&1  &&
                 
                 #if (str($hapCUT2_OUTPUT_conditional.germline_conditional.germline_option)=="Yes"):
                         #if ($hapCUT2_OUTPUT_conditional.germline_conditional.germline_vcf):
-                        neoepiscope swap -i "${hapCUT2_OUTPUT_conditional.germline_conditional.germline_vcf}" -o "${swapped_germline}" 2>/dev/null &&
-                        neoepiscope merge -g "${swapped_germline}" -s "${swapped_somatic}" -o "${merged_vcf}" 2>/dev/null &&
+                        neoepiscope swap -i "${hapCUT2_OUTPUT_conditional.germline_conditional.germline_vcf}" -o "${swapped_germline}" 2>&1  &&
+                        neoepiscope merge -g "${swapped_germline}" -s "${swapped_somatic}" -o "${merged_vcf}" 2>&1  &&
                         #end if
 
                 #else if (str($hapCUT2_OUTPUT_conditional.germline_conditional.germline_option)=="No"):
-                cp "${swapped_somatic}" "${merged_vcf}" 2>/dev/null &&
+                cp "${swapped_somatic}" "${merged_vcf}" 2>&1  &&
                 #end if 
                 
                 cd ~/HapCUT2 &&
-                ./build/extractHAIRS --bam $sorted_bam --VCF $merged_vcf --out $fragment_file 2>/dev/null&&
+                ./build/extractHAIRS --bam $sorted_bam --VCF $merged_vcf --out $fragment_file 2>&1 &&
 
-                ./build/HAPCUT2 --fragments $fragment_file --VCF $merged_vcf --output $Hapcut_output 2>/dev/null&&
+                ./build/HAPCUT2 --fragments $fragment_file --VCF $merged_vcf --output $Hapcut_output 2>&1 &&
             #end if
         
-        neoepiscope prep -v $merged_vcf -c $Hapcut_output -o $adjusted_Hapcut_output 2>/dev/null &&
+        neoepiscope prep -v $merged_vcf -c $Hapcut_output -o $adjusted_Hapcut_output 2>&1 &&
         neoepiscope call -c "${adjusted_Hapcut_output}"
         #end if
            
@@ -69,7 +70,8 @@
         #end if
 
         -o $output
-        2>/dev/null
+
+        2>&1
     ]]>
 
     </command>
@@ -347,4 +349,3 @@ Option 3::
     </citations>
 
 </tool>
-
