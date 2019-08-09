@@ -1,0 +1,26 @@
+<tool id="tsv2bed" name="neoepiscope tsv2bed" version="0.1.0" python_template_version="3.5">
+    
+    <requirements>
+    </requirements>
+    
+    <command interpreter="python3">viz2.py
+        <![CDATA[ ${neoepiscope_tsv} >${output}
+         ]]>
+    </command>
+
+    <inputs>
+        <param name="neoepiscope_tsv" type="data" format="txt" label="Input neoepiscope tsv" />
+    </inputs>
+
+    <outputs>
+        <data name="output" format="bed" label="${on_string} from neoepiscope in .bed " />
+    </outputs>
+
+    <help><![CDATA[
+      Can be uploaded as a track in the genome browser
+    ]]>
+        
+    </help>
+
+</tool>
+
