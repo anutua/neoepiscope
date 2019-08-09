@@ -1,12 +1,14 @@
- <!--Assumes $neoepiscope download has been run afer installation.-->
-<tool id="neoepiscopeWrapper2" name="neoepiscope_neoepitope " version="0.1.0" python_template_version="3.5">
+<!--.xml tool file for neopepiscope implementation in the galaxy project web ui 
+    Assumes $neoepiscope download has been run afer installation.
+-->
+<tool id="neoepiscopeWrapper2" name="neoepiscope" version="0.1.0" python_template_version="3.5">
     
     <requirements>
-       
         <requirement type="package" version="2.3.4.1">bowtie2</requirement>
         <requirement type="package" version="1.9">samtools</requirement>
     </requirements>
-
+    <stdio>
+    </stdio>
     <!--Specify the command to be passed to terminal based on the user inputs for neoepiscope. Runs neoepiscope index and neoepiscope call
     `2>&1` in command sections because galaxy sets tool state to error when stderr is detected-->
     <command ><![CDATA[ 
@@ -71,10 +73,10 @@
 
         -o $output
 
-        2>&1
+        2>1
     ]]>
-
     </command>
+
     <inputs>
         <!--genome build options-->
         <conditional name="genome_build_conditional">
@@ -158,7 +160,6 @@
                 </conditional>      
             </when> 
         </conditional>
-
     </inputs>
     
     <outputs>
@@ -183,8 +184,8 @@
         <data format="vcf" name="adjusted_Hapcut_output" label="Adjusted Hapcut2 Output">
             <filter> hapCUT2_OUTPUT_conditional['hapCUT2_OUTPUT']=="No"</filter>
         </data>
-        <data name="output" format="tsv" label="Neoepitopes found">
-        </data>  
+        <data name="output" format="tsv" label="${tool.name} neoepitopes found on ${on_string}">
+        </data>   
     </outputs>
 
     <tests>
@@ -246,7 +247,7 @@
             <output name="dict_path"/>
         </test>
         
-        <!--Affinity yes-->
+        <!--Includes Binding Affinity Predictions-->
         <test expect_num_outputs="1">
             <conditional name="hapCUT2_OUTPUT_conditional">
                 <param name="hapCUT2_OUTPUT" value="Yes"/>
